@@ -21,6 +21,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	api "github.com/fuchsi/irrenhaus-api"
@@ -110,19 +111,25 @@ func shoutboxPoll(box string, refresh int) (error) {
 	}
 
 	for {
+		for i := 0; i < refresh; i++ {
+			fmt.Printf("[refresh in %ds]     \r", refresh -i)
+			time.Sleep(time.Second * 1)
+		}
+		fmt.Print(strings.Repeat(" ", 20) + "\r")
+		fmt.Print("[refreshing]     \r")
+
 		messages, err := api.ShoutboxRead(c, boxId, maxId)
 		if err != nil {
 			return err
 		}
 
+		fmt.Print(strings.Repeat(" ", 20) + "\r")
 		for _, message := range messages {
 			fmt.Printf("[%s] <%s> %s\n", message.Date.Format("01.02 15:04"), message.User, message.Message)
 			if message.Id > maxId {
 				maxId = message.Id
 			}
 		}
-
-		time.Sleep(time.Second * time.Duration(refresh))
 	}
 
 	return nil
