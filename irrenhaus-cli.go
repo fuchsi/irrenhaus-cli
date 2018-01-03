@@ -196,6 +196,7 @@ func main() {
 
 			fmt.Println("\tall")
 			fmt.Println("\t\tShow all informations")
+			break
 		}
 
 		tid, err := strconv.ParseInt(getopt.Arg(1), 10, 64)
@@ -218,6 +219,9 @@ func main() {
 		}
 
 		err = thank(tid)
+		if err != nil {
+			PrintError(err.Error())
+		}
 	case "comment":
 		if getopt.NArgs() < 3 {
 			PrintError("Missing Parameters")
@@ -229,6 +233,57 @@ func main() {
 		message := strings.Join(getopt.Args()[2:], " ")
 
 		err = comment(tid, message)
+		if err != nil {
+			PrintError(err.Error())
+		}
+	case "shout":
+		if getopt.NArgs() < 2 {
+			shoutboxUsage()
+			break
+		}
+
+		subcommand := getopt.Arg(1)
+		box := "user"
+		argOffset := 2
+		if getopt.Arg(2) == "team" {
+			box = "team"
+			argOffset = 3
+		}
+
+		switch subcommand {
+		case "read":
+			err := shoutboxRead(box)
+			if err != nil {
+				PrintError(err.Error())
+			}
+		case "write":
+			if getopt.NArgs() > argOffset {
+				message := strings.Join(getopt.Args()[argOffset:], " ")
+				err := shoutboxWrite(box, message)
+				if err != nil {
+					PrintError(err.Error())
+				}
+				break
+			}
+
+			shoutboxUsage()
+			PrintError("Too few parameters")
+		case "poll":
+			refresh := 10
+			if getopt.Arg(argOffset) != "" {
+				temp, err := strconv.ParseInt(getopt.Arg(argOffset), 10, 32)
+				if err != nil {
+					shoutboxUsage()
+					PrintError("refresh is not a number")
+				}
+				refresh = int(temp)
+			}
+
+			err := shoutboxPoll(box, refresh)
+			if err != nil {
+				PrintError(err.Error())
+			}
+		}
 	case "commands":
 		fallthrough
 	default:
