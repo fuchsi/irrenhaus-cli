@@ -34,7 +34,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-func download(tid int64, destination string) (error) {
+func download(tid int64, destination string) error {
 	PrintVerbose("Downloading torrent", tid)
 	c := getConnection()
 
@@ -64,7 +64,7 @@ func download(tid int64, destination string) (error) {
 	return nil
 }
 
-func upload(meta string, nfo string, image1 string, image2 string, name string, description string, category int) (error) {
+func upload(meta string, nfo string, image1 string, image2 string, name string, description string, category int) error {
 	metard, err := os.Open(meta)
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func upload(meta string, nfo string, image1 string, image2 string, name string, 
 	return nil
 }
 
-func search(needle string, categories []int, dead bool) (error) {
+func search(needle string, categories []int, dead bool) error {
 	c := getConnection()
 
 	entries, err := api.Search(c, needle, categories, dead)
@@ -142,7 +142,7 @@ func search(needle string, categories []int, dead bool) (error) {
 	return nil
 }
 
-func details(tid int64, subcommand string) (error) {
+func details(tid int64, subcommand string) error {
 	c := getConnection()
 
 	info := false
@@ -284,7 +284,7 @@ func details(tid int64, subcommand string) (error) {
 	return nil
 }
 
-func thank(tid int64) (error) {
+func thank(tid int64) error {
 	c := getConnection()
 
 	ok, err := api.Thank(c, tid)

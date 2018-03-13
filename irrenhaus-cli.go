@@ -247,7 +247,9 @@ func main() {
 		argOffset := 2
 		if getopt.Arg(2) == "team" {
 			box = "team"
-			argOffset = 3
+			argOffset++
+		} else if getopt.Arg(2) == "user" {
+			argOffset++
 		}
 
 		switch subcommand {
@@ -257,7 +259,7 @@ func main() {
 				PrintError(err.Error())
 			}
 		case "write":
-			if getopt.NArgs() > argOffset {
+			if getopt.NArgs() >= argOffset {
 				message := strings.Join(getopt.Args()[argOffset:], " ")
 				err := shoutboxWrite(box, message)
 				if err != nil {
@@ -325,7 +327,7 @@ func main() {
 }
 
 // Initialize and write the config
-func initConfig(username, password, pin, url string) (error) {
+func initConfig(username, password, pin, url string) error {
 	config.Username = username
 	config.Password = password
 	config.Pin = pin
@@ -364,7 +366,7 @@ func PrintError(a ...interface{}) {
 //  prompt: Prompt/Question for the user
 //  result: Input from the user
 // It returns any error encountered.
-func Ask(prompt string, result *string) (error) {
+func Ask(prompt string, result *string) error {
 	fmt.Printf("%s: ", prompt)
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
@@ -381,7 +383,7 @@ func Ask(prompt string, result *string) (error) {
 //  prompt: Prompt/Question for the user
 //  result: Input from the user
 // It returns any error encountered.
-func AskFor(prompt string, result *string) (error) {
+func AskFor(prompt string, result *string) error {
 	for len(*result) == 0 {
 		err := Ask(prompt, result)
 		if err != nil {

@@ -27,7 +27,7 @@ import (
 	api "github.com/fuchsi/irrenhaus-api"
 )
 
-var ShoutboxId = map[string]int{
+var ShoutboxID = map[string]int{
 	"user": 1,
 	"team": 2,
 }
@@ -47,15 +47,15 @@ func shoutboxUsage() {
 	fmt.Println("\tbox can be 'user' or 'team' and defaults to 'user' if ommited")
 }
 
-func shoutboxRead(box string) (error) {
+func shoutboxRead(box string) error {
 	c := getConnection()
 
-	boxId, ok := ShoutboxId[box]
+	boxID, ok := ShoutboxID[box]
 	if !ok {
 		return errors.New("invalid shoutbox name")
 	}
 
-	messages, err := api.ShoutboxRead(c, boxId, 0)
+	messages, err := api.ShoutboxRead(c, boxID, 0)
 	if err != nil {
 		return err
 	}
@@ -67,15 +67,15 @@ func shoutboxRead(box string) (error) {
 	return nil
 }
 
-func shoutboxWrite(box string, message string) (error) {
+func shoutboxWrite(box string, message string) error {
 	c := getConnection()
 
-	boxId, ok := ShoutboxId[box]
+	boxID, ok := ShoutboxID[box]
 	if !ok {
 		return errors.New("invalid shoutbox name")
 	}
 
-	ok, err := api.ShoutboxWrite(c, boxId, message)
+	ok, err := api.ShoutboxWrite(c, boxID, message)
 	if err != nil {
 		return err
 	}
@@ -88,46 +88,48 @@ func shoutboxWrite(box string, message string) (error) {
 	return nil
 }
 
-func shoutboxPoll(box string, refresh int) (error) {
+func shoutboxPoll(box string, refresh int) error {
 	c := getConnection()
 
-	boxId, ok := ShoutboxId[box]
+	boxID, ok := ShoutboxID[box]
 	if !ok {
 		return errors.New("invalid shoutbox name")
 	}
 
-	messages, err := api.ShoutboxRead(c, boxId, 0)
+	messages, err := api.ShoutboxRead(c, boxID, 0)
 	if err != nil {
 		return err
 	}
 
-	maxId := int64(0)
+	maxID := int64(0)
 
 	for _, message := range messages {
 		fmt.Printf("[%s] <%s> %s\n", message.Date.Format("01.02 15:04"), message.User, message.Message)
-		if message.Id > maxId {
-			maxId = message.Id
+		if message.Id > maxID {
+			maxID = message.Id
 		}
 	}
 
 	for {
 		for i := 0; i < refresh; i++ {
-			fmt.Printf("[refresh in %ds]     \r", refresh -i)
+			fmt.Printf("[refresh in %ds]"+strings.Repeat(" ", 65)+"\r", refresh-i)
 			time.Sleep(time.Second * 1)
 		}
-		fmt.Print(strings.Repeat(" ", 20) + "\r")
-		fmt.Print("[refreshing]     \r")
+		fmt.Print(strings.Repeat(" ", 80) + "\r")
+		fmt.Print("[refreshing]" + strings.Repeat(" ", 68) + "\r")
 
-		messages, err := api.ShoutboxRead(c, boxId, maxId)
+		messages, err := api.ShoutboxRead(c, boxID, maxID)
 		if err != nil {
-			return err
+			fmt.Printf("[error] %s\r", err.Error())
+			fmt.Printf("[shoutboxPoll] %s\n", err.Error())
+			continue
 		}
 
-		fmt.Print(strings.Repeat(" ", 20) + "\r")
+		fmt.Print(strings.Repeat(" ", 80) + "\r")
 		for _, message := range messages {
 			fmt.Printf("[%s] <%s> %s\n", message.Date.Format("01.02 15:04"), message.User, message.Message)
-			if message.Id > maxId {
-				maxId = message.Id
+			if message.Id > maxID {
+				maxID = message.Id
 			}
 		}
 	}
