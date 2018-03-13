@@ -128,20 +128,23 @@ func shoutboxPoll(box string, refresh int) error {
 	statusbar := "[refresh in %ds%s]%s\r"
 
 	for {
+		repeat := 65 - len(extraStatus)
+		if repeat < 0 {
+			repeat *= -1
+		}
 		for i := 0; i < refresh; i++ {
-			fmt.Printf(statusbar, refresh-i, extraStatus, strings.Repeat(" ", 65-len(extraStatus)))
+			fmt.Printf(statusbar, refresh-i, extraStatus, strings.Repeat(" ", repeat))
 			time.Sleep(time.Second * 1)
 		}
-		fmt.Print(strings.Repeat(" ", 80) + "\r")
-		fmt.Print("[refreshing]" + strings.Repeat(" ", 68) + "\r")
+		fmt.Print("[refreshing]" + strings.Repeat(" ", repeat+3) + "\r")
 
 		messages, err := api.ShoutboxRead(c, boxID, maxID)
 		if err != nil {
-			extraStatus = " - last error:" + err.Error()
+			extraStatus = " - last error: " + strings.TrimRight(err.Error(), "\n")
 			continue
 		}
 
-		fmt.Print(strings.Repeat(" ", 80) + "\r")
+		fmt.Print(strings.Repeat(" ", repeat+15) + "\r")
 		extraStatus = ""
 		for _, message := range messages {
 			// control messages
