@@ -61,6 +61,10 @@ func shoutboxRead(box string) error {
 	}
 
 	for _, message := range messages {
+		// skip control messages
+		if message.Event != nil {
+			continue
+		}
 		fmt.Printf("[%s] <%s> %s\n", message.Date.Format("01.02 15:04"), message.User, message.Message)
 	}
 
@@ -103,16 +107,29 @@ func shoutboxPoll(box string, refresh int) error {
 
 	maxID := int64(0)
 
+	extraStatus := ""
+
 	for _, message := range messages {
+		// control messages
+		if message.Event != nil {
+			switch {
+			case message.Event.Type&api.ShoutboxEventUserMessage == api.ShoutboxEventUserMessage:
+				unreadMessages := message.Event.Data[1]
+				extraStatus = fmt.Sprintf(" - %s unread messages", unreadMessages)
+			}
+			continue
+		}
 		fmt.Printf("[%s] <%s> %s\n", message.Date.Format("01.02 15:04"), message.User, message.Message)
 		if message.Id > maxID {
 			maxID = message.Id
 		}
 	}
 
+	statusbar := "[refresh in %ds%s]%s\r"
+
 	for {
 		for i := 0; i < refresh; i++ {
-			fmt.Printf("[refresh in %ds]"+strings.Repeat(" ", 65)+"\r", refresh-i)
+			fmt.Printf(statusbar, refresh-i, extraStatus, strings.Repeat(" ", 65-len(extraStatus)))
 			time.Sleep(time.Second * 1)
 		}
 		fmt.Print(strings.Repeat(" ", 80) + "\r")
@@ -120,13 +137,22 @@ func shoutboxPoll(box string, refresh int) error {
 
 		messages, err := api.ShoutboxRead(c, boxID, maxID)
 		if err != nil {
-			fmt.Printf("[error] %s\r", err.Error())
-			fmt.Printf("[shoutboxPoll] %s\n", err.Error())
+			extraStatus = " - last error:" + err.Error()
 			continue
 		}
 
 		fmt.Print(strings.Repeat(" ", 80) + "\r")
+		extraStatus = ""
 		for _, message := range messages {
+			// control messages
+			if message.Event != nil {
+				switch {
+				case message.Event.Type&api.ShoutboxEventUserMessage == api.ShoutboxEventUserMessage:
+					unreadMessages := message.Event.Data[1]
+					extraStatus = fmt.Sprintf(" - %s unread messages", unreadMessages)
+				}
+				continue
+			}
 			fmt.Printf("[%s] <%s> %s\n", message.Date.Format("01.02 15:04"), message.User, message.Message)
 			if message.Id > maxID {
 				maxID = message.Id
@@ -134,5 +160,5 @@ func shoutboxPoll(box string, refresh int) error {
 		}
 	}
 
-	return nil
+	return nil // returns never
 }
